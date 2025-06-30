@@ -23,8 +23,11 @@ POSITION_SIZE = 1
 
 def run_strategy(ticker):
     df = yf.download(ticker, start=start_date, end=end_date, interval="1d")
-    if df is None or df.empty or 'Close' not in df.columns:
+    if df.empty:
+        st.error(f"No data found for {ticker}. Check the symbol or date range.")
         return None, None, None
+        st.write("Downloaded data preview:", df.head())
+        df['sma20'] = ta.trend.SMAIndicator(close=df['Close'], window=20).sma_indicator()
 
     df.dropna(inplace=True)
 
