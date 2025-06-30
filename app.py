@@ -28,7 +28,6 @@ def run_strategy(ticker):
 
     df.dropna(inplace=True)
 
-    # Correct use of TA indicators
     sma = ta.trend.SMAIndicator(close=df['Close'], window=20)
     df['sma20'] = sma.sma_indicator()
 
