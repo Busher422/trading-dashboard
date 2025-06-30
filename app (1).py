@@ -29,7 +29,7 @@ def run_strategy(ticker):
     df.dropna(inplace=True)
 
     sma = ta.trend.SMAIndicator(close=df['Close'], window=20)
-    df['sma20'] = sma.sma_indicator()
+    df['sma20'] = ta.trendSMAIndicator(close=df['Close'], window=20).sma_indicator()
 
     rsi = ta.momentum.RSIIndicator(close=df['Close'], window=14)
     df['rsi'] = rsi.rsi()
