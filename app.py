@@ -23,12 +23,18 @@ POSITION_SIZE = 1
 
 def run_strategy(ticker):
     df = yf.download(ticker, start=start_date, end=end_date, interval="1d")
-    if df.empty:
+    if df is None or df.empty or 'Close' not in df.columns:
         return None, None, None
 
     df.dropna(inplace=True)
-    df['sma20'] = ta.trend.sma_indicator(df['Close'], window=20)
-    df['rsi'] = ta.momentum.RSIIndicator(df['Close'], window=14).rsi()
+
+    # Correct use of TA indicators
+    sma = ta.trend.SMAIndicator(close=df['Close'], window=20)
+    df['sma20'] = sma.sma_indicator()
+
+    rsi = ta.momentum.RSIIndicator(close=df['Close'], window=14)
+    df['rsi'] = rsi.rsi()
+
     df['shares'] = 0
     df['cash'] = CASH
     df['portfolio'] = CASH
@@ -39,10 +45,10 @@ def run_strategy(ticker):
 
     for i in range(20, len(df)):
         price = df.iloc[i]['Close']
-        rsi = df.iloc[i]['rsi']
-        sma20 = df.iloc[i]['sma20']
+        rsi_val = df.iloc[i]['rsi']
+        sma_val = df.iloc[i]['sma20']
 
-        if not in_position and rsi < 30 and price < sma20:
+        if not in_position and rsi_val < 30 and price < sma_val:
             in_position = True
             entry_price = price
             trades.append((df.index[i], "BUY", round(price, 2)))
@@ -55,7 +61,7 @@ def run_strategy(ticker):
                 reason = "STOP-LOSS"
             elif price >= entry_price * 1.10:
                 reason = "TAKE-PROFIT"
-            elif rsi > 70 and price > sma20:
+            elif rsi_val > 70 and price > sma_val:
                 reason = "RSI-SELL"
 
             if reason:
@@ -86,7 +92,7 @@ for ticker in tickers:
     df, stats, trades = run_strategy(ticker)
 
     if df is None:
-        st.warning(f"No data for {ticker}")
+        st.warning(f"No data available for {ticker}. Please check the symbol or date range.")
         continue
 
     st.write(pd.DataFrame([stats], index=[ticker]))
