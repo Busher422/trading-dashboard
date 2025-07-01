@@ -1,63 +1,69 @@
 
 import streamlit as st
-import yfinance as yf
 import pandas as pd
+import yfinance as yf
 import plotly.graph_objs as go
 import ta
 
-st.set_page_config(layout="wide")
+st.set_page_config(page_title="Buy Low, Sell High - Trading Strategy Dashboard")
+
 st.title("📉 Buy Low, Sell High - Trading Strategy Dashboard")
 
-def load_data(ticker):
-    try:
-        df = yf.download(ticker, period="6mo", interval="1d")
-        df.dropna(inplace=True)
-        return df
-    except Exception as e:
-        st.error(f"Error loading data for {ticker}: {e}")
-        return pd.DataFrame()
+# Input section
+ticker = st.text_input("Enter Stock Ticker", value="AAPL").upper()
+start_date = st.date_input("Start Date", pd.to_datetime("2022-01-01"))
+end_date = st.date_input("End Date", pd.to_datetime("today"))
+
+@st.cache_data
+def load_data(ticker, start, end):
+    data = yf.download(ticker, start=start, end=end)
+    return data
 
 def run_strategy(ticker):
-    df = load_data(ticker)
+    df = load_data(ticker, start_date, end_date)
     if df.empty:
-        st.warning(f"No data available for {ticker}. Please check the symbol or date range.")
         return df, None, None
 
-    df['sma20'] = ta.trend.SMAIndicator(close=df['Close'], window=20).sma_indicator()
-    df['sma50'] = ta.trend.SMAIndicator(close=df['Close'], window=50).sma_indicator()
-    df['Buy'] = (df['sma20'] > df['sma50']) & (df['sma20'].shift(1) <= df['sma50'].shift(1))
-    df['Sell'] = (df['sma20'] < df['sma50']) & (df['sma20'].shift(1) >= df['sma50'].shift(1))
+    # Fix: Ensure 'close' is 1D
+    df["sma20"] = ta.trend.SMAIndicator(close=df["Close"].squeeze(), window=20).sma_indicator()
+    df["sma50"] = ta.trend.SMAIndicator(close=df["Close"].squeeze(), window=50).sma_indicator()
 
-    trades = df[(df['Buy']) | (df['Sell'])]
-    stats = {
-        "Total Buys": int(df['Buy'].sum()),
-        "Total Sells": int(df['Sell'].sum())
-    }
-    return df, stats, trades
+    # Buy/Sell signals
+    buy_signals = (df["sma20"] > df["sma50"]) & (df["sma20"].shift(1) <= df["sma50"].shift(1))
+    sell_signals = (df["sma20"] < df["sma50"]) & (df["sma20"].shift(1) >= df["sma50"].shift(1))
 
-def plot_chart(df, ticker):
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df.index, y=df['Close'], mode='lines', name='Close'))
-    fig.add_trace(go.Scatter(x=df.index, y=df['sma20'], mode='lines', name='SMA20'))
-    fig.add_trace(go.Scatter(x=df.index, y=df['sma50'], mode='lines', name='SMA50'))
-    fig.add_trace(go.Scatter(x=df.index[df['Buy']], y=df['Close'][df['Buy']], mode='markers', marker=dict(color='green', size=8), name='Buy Signal'))
-    fig.add_trace(go.Scatter(x=df.index[df['Sell']], y=df['Close'][df['Sell']], mode='markers', marker=dict(color='red', size=8), name='Sell Signal'))
-    fig.update_layout(title=f"{ticker} Price Chart with Buy/Sell Signals", xaxis_title="Date", yaxis_title="Price", height=600)
-    st.plotly_chart(fig, use_container_width=True)
+    df["Signal"] = 0
+    df.loc[buy_signals, "Signal"] = 1
+    df.loc[sell_signals, "Signal"] = -1
 
-# Sidebar
-st.sidebar.header("Select Tickers")
-tickers = st.sidebar.multiselect("Choose companies", ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA"], default=["AAPL"])
+    trades = df[df["Signal"] != 0]
 
-# Main display
-for ticker in tickers:
-    st.subheader(f"📊 {ticker}")
+    return df, df.describe(), trades
+
+if ticker:
     df, stats, trades = run_strategy(ticker)
-    if not df.empty:
-        plot_chart(df, ticker)
-        if stats:
-            st.write("**Strategy Summary:**")
-            st.json(stats)
-        if trades is not None and not trades.empty:
-            st.write("**Trade Log:**")
-            st.dataframe(trades.tail(10))
+
+    if df is not None and not df.empty:
+        # Plotting
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=df.index, y=df["Close"], mode="lines", name="Close"))
+        fig.add_trace(go.Scatter(x=df.index, y=df["sma20"], mode="lines", name="SMA20"))
+        fig.add_trace(go.Scatter(x=df.index, y=df["sma50"], mode="lines", name="SMA50"))
+
+        buy_signals = df[df["Signal"] == 1]
+        sell_signals = df[df["Signal"] == -1]
+
+        fig.add_trace(go.Scatter(x=buy_signals.index, y=buy_signals["Close"],
+                                 mode="markers", name="Buy", marker=dict(symbol="triangle-up", color="green", size=10)))
+        fig.add_trace(go.Scatter(x=sell_signals.index, y=sell_signals["Close"],
+                                 mode="markers", name="Sell", marker=dict(symbol="triangle-down", color="red", size=10)))
+
+        st.plotly_chart(fig)
+
+        st.subheader("📊 Stats Summary")
+        st.write(stats)
+
+        st.subheader("🪙 Trades")
+        st.write(trades)
+    else:
+        st.warning(f"No data available for {ticker}. Please check the symbol or date range.")
