@@ -28,11 +28,9 @@ def run_strategy(ticker):
 
     return df, stats, trades
 
-ticker = st.text_input("Enter Stock Symbol", value="AAPL")
-
+ticker = st.text_input("Enter Stock Symbol", "AAPL")
 if ticker:
-    try:
-        df, stats, trades = run_strategy(ticker)
+    df, stats, trades = run_strategy(ticker)
 
         st.subheader("📊 Stats Summary")
         st.dataframe(stats)
