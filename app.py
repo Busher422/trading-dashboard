@@ -28,10 +28,10 @@ def run_strategy(ticker):
 
     return df, stats, trades
 
-ticker = st.text_input("Enter Stock Symbol", "AAPL")
+try:
+    ticker = st.text_input("Enter Stock Symbol", "AAPL")
 
-if ticker:
-    try:
+    if ticker:
         df, stats, trades = run_strategy(ticker)
 
         st.subheader("📊 Stats Summary")
@@ -47,5 +47,5 @@ if ticker:
         fig.add_trace(go.Scatter(x=df.index, y=df["sma50"], mode="lines", name="SMA 50"))
         st.plotly_chart(fig, use_container_width=True)
 
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
+except Exception as e:
+    st.error(f"An error occurred: {e}")
