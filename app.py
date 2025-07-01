@@ -26,6 +26,7 @@ def run_strategy(ticker):
 
     # Fix: Ensure 'close' is 1D
     df["sma20"] = ta.trend.SMAIndicator(close=df["Close"].squeeze(), window=20).sma_indicator()
+    df["sma50"] = ta.trend.SMAIndicator(close=df["Close"], window=50).sma_indicator()
     df["sma50"] = ta.trend.SMAIndicator(close=df["Close"].squeeze(), window=50).sma_indicator()
 
     # Buy/Sell signals
