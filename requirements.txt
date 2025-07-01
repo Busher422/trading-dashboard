@@ -4,3 +4,4 @@ pandas
 ta
 matplotlib
 plotly
+ta
