@@ -16,8 +16,8 @@ def load_data(ticker):
 
 def run_strategy(ticker):
     df = load_data(ticker)
-    df["sma20"] = ta.trend.SMAIndicator(close=df["Close"], window=20).sma_indicator().squeeze()
-    df["sma50"] = ta.trend.SMAIndicator(close=df["Close"], window=50).sma_indicator().squeeze()
+    df["sma20"] = ta.trend.SMAIndicator(close=df["Close"], window=20).sma_indicator().iloc[:, 0]
+    df["sma50"] = ta.trend.SMAIndicator(close=df["Close"], window=50).sma_indicator().iloc[:, 0]
 
     df["Signal"] = 0
     df.loc[df["sma20"] > df["sma50"], "Signal"] = 1
