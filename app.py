@@ -21,7 +21,7 @@ def run_strategy(ticker):
 
     df["Signal"] = 0
     df.loc[df["sma20"] > df["sma50"], "Signa1"] = 1
-    df.loc[df["sma20"] < df["sma50"], "Signal"] = -1
+    df.loc[df["sma20"] < df["sma50"], "Signa1"] = -1
 
     stats = df.describe()
     trades = df[df["Signal"].diff() != 0]
