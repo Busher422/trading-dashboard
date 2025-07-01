@@ -7,7 +7,7 @@ import ta
 
 st.set_page_config(page_title="Buy Low, Sell High", layout="wide")
 
-st.title("📈 Buy Low, Sell High - Trading Strategy Dashboard")
+st.title("📉 Buy Low, Sell High - Trading Strategy Dashboard")
 
 def load_data(ticker):
     df = yf.download(ticker, period="1mo", interval="1d")
@@ -28,24 +28,24 @@ def run_strategy(ticker):
 
     return df, stats, trades
 
-try:
-    ticker = st.text_input("Enter Stock Symbol", "AAPL")
+ticker = st.text_input("Enter Stock Symbol", "AAPL")
 
-    if ticker:
+if ticker:
+    try:
         df, stats, trades = run_strategy(ticker)
 
         st.subheader("📊 Stats Summary")
         st.dataframe(stats)
 
-        st.subheader("💼 Trades")
+        st.subheader("📈 Trades")
         st.dataframe(trades)
 
-        st.subheader("📈 Price Chart")
+        st.subheader("📉 Price Chart")
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=df.index, y=df["Close"], mode="lines", name="Close"))
         fig.add_trace(go.Scatter(x=df.index, y=df["sma20"], mode="lines", name="SMA 20"))
         fig.add_trace(go.Scatter(x=df.index, y=df["sma50"], mode="lines", name="SMA 50"))
         st.plotly_chart(fig, use_container_width=True)
 
-except Exception as e:
-    st.error(f"An error occurred: {e}")
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
