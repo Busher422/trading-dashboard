@@ -20,7 +20,7 @@ def run_strategy(ticker):
     df["sma50"] = ta.trend.SMAIndicator(close=df["Close"], window=50).sma_indicator().squeeze()
 
     df["Signal"] = 0
-    df.loc[df["sma20"] > df["sma50"], "Signal"] = 1
+    df.loc[df["sma20"] > df["sma50"], "Signa1"] = 1
     df.loc[df["sma20"] < df["sma50"], "Signal"] = -1
 
     stats = df.describe()
