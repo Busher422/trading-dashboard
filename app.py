@@ -33,11 +33,11 @@ ticker = st.text_input("Enter Stock Symbol", "AAPL")
 if ticker:
     df, stats, trades = run_strategy(ticker)
     
-        st.subheader("📊 Stats Summary")
-        st.dataframe(stats)
+    st.subheader("📊 Stats Summary")
+    st.dataframe(stats)
 
-        st.subheader("🧾 Trades")
-        st.dataframe(trades)
+    st.subheader("🧾 Trades")
+    st.dataframe(trades)
 
         st.subheader("📈 Price Chart")
         fig = go.Figure()
