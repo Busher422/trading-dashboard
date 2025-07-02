@@ -6,8 +6,7 @@ import plotly.graph_objs as go
 import ta
 
 st.set_page_config(page_title="Buy Low, Sell High", layout="wide")
-
-st.title("📉 Buy Low, Sell High – Trading Strategy Dashboard")
+st.title("📈 Buy Low, Sell High - Trading Strategy Dashboard")
 
 def load_data(ticker):
     df = yf.download(ticker, period="1mo", interval="1d")
@@ -16,12 +15,10 @@ def load_data(ticker):
 
 def run_strategy(ticker):
     df = load_data(ticker)
+    close_prices = df["Close"].squeeze()  # <- FIXED HERE
 
-    # Ensure the Close column is a 1D Series
-    close_prices = df["Close"]
-
-    df["sma20"] = ta.trend.SMAIndicator(close=close_prices, window=20).sma_indicator()
-    df["sma50"] = ta.trend.SMAIndicator(close=close_prices, window=50).sma_indicator()
+    df["sma20"] = ta.trend.SMAIndicator(close=close_prices, window=20).sma_indicator().squeeze()
+    df["sma50"] = ta.trend.SMAIndicator(close=close_prices, window=50).sma_indicator().squeeze()
 
     df["Signal"] = 0
     df.loc[df["sma20"] > df["sma50"], "Signal"] = 1
@@ -34,22 +31,20 @@ def run_strategy(ticker):
 
 try:
     ticker = st.text_input("Enter Stock Symbol", "AAPL")
-
     if ticker:
         df, stats, trades = run_strategy(ticker)
 
         st.subheader("📊 Stats Summary")
         st.dataframe(stats)
 
-        st.subheader("🔁 Trades")
+        st.subheader("📈 Trades")
         st.dataframe(trades)
 
-        st.subheader("📈 Price Chart")
+        st.subheader("📉 Price Chart")
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=df.index, y=df["Close"], mode="lines", name="Close"))
         fig.add_trace(go.Scatter(x=df.index, y=df["sma20"], mode="lines", name="SMA 20"))
         fig.add_trace(go.Scatter(x=df.index, y=df["sma50"], mode="lines", name="SMA 50"))
         st.plotly_chart(fig, use_container_width=True)
-
 except Exception as e:
     st.error(f"An error occurred: {e}")
