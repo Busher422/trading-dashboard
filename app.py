@@ -16,6 +16,9 @@ def load_data(ticker):
 
 def run_strategy(ticker):
     df = load_data(ticker)
+
+    close_prices = df["Close"].squeeze()
+    
     df["sma20"] = ta.trend.SMAIndicator(close=df["Close"], window=20).sma_indicator().squeeze()
     df["sma50"] = ta.trend.SMAIndicator(close=df["Close"], window=50).sma_indicator().squeeze()
 
